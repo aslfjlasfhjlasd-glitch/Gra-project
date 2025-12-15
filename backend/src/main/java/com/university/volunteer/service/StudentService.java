@@ -9,6 +9,7 @@ import com.university.volunteer.entity.Tag;
 import com.university.volunteer.mapper.StudentMapper;
 import com.university.volunteer.mapper.StudentTagMapper;
 import com.university.volunteer.mapper.TagMapper;
+import com.university.volunteer.utils.MD5Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -253,13 +254,13 @@ public class StudentService {
                 return Result.error("学生信息不存在");
             }
             
-            // 验证旧密码
-            if (!oldPassword.equals(student.getXsMm())) {
+            // 验证旧密码：验证旧密码时，要先把输入的旧密码加密
+            if (!MD5Util.encrypt(oldPassword).equals(student.getXsMm())) {
                 return Result.error("原密码错误");
             }
             
-            // 更新密码
-            int rows = studentMapper.updatePassword(studentId, newPassword);
+            // 更新密码：保存新密码时，要加密
+            int rows = studentMapper.updatePassword(studentId, MD5Util.encrypt(newPassword));
             if (rows > 0) {
                 return Result.success("密码修改成功");
             } else {
@@ -409,7 +410,7 @@ public class StudentService {
             Student student = new Student();
             student.setXsXh(studentId);
             student.setXsXm(dto.getUsername());
-            student.setXsMm(password); // 密码以明文存储（与登录逻辑一致）
+            student.setXsMm(MD5Util.encrypt(password)); // 存入数据库时加密
             student.setSsXy(dto.getAcademy());
             student.setXsDh(dto.getPhone());
             
@@ -452,9 +453,9 @@ public class StudentService {
             student.setZzmm(dto.getPoliticalStatus());
             student.setBjMc(dto.getClassName());
             
-            // 如果提供了密码，则更新密码
+            // 如果提供了密码，则更新密码：加密后存入
             if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
-                student.setXsMm(dto.getPassword());
+                student.setXsMm(MD5Util.encrypt(dto.getPassword()));
             }
             
             int rows = studentMapper.updateStudentFullInfo(student);
@@ -485,9 +486,9 @@ public class StudentService {
                 return Result.error("学生不存在");
             }
             
-            // 重置为默认密码
+            // 重置为默认密码：存入加密后的 123456
             String defaultPassword = "123456";
-            int rows = studentMapper.updatePassword(studentId, defaultPassword);
+            int rows = studentMapper.updatePassword(studentId, MD5Util.encrypt(defaultPassword));
             if (rows > 0) {
                 return Result.success("密码已重置为：" + defaultPassword);
             } else {

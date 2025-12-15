@@ -10,6 +10,7 @@ import com.university.volunteer.mapper.AcademyMapper;
 import com.university.volunteer.mapper.AdminMapper;
 import com.university.volunteer.mapper.DepartmentHeadMapper;
 import com.university.volunteer.mapper.StudentMapper;
+import com.university.volunteer.utils.MD5Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -83,8 +84,8 @@ public class AuthService {
             return Result.error("账号不存在");
         }
 
-        // 验证密码
-        if (!password.equals(student.getXsMm())) {
+        // 验证密码：将输入的密码加密后，再与数据库对比
+        if (!MD5Util.encrypt(password).equals(student.getXsMm())) {
             return Result.error("密码错误");
         }
 
@@ -100,10 +101,13 @@ public class AuthService {
      * @return 验证结果
      */
     private Result<?> loginHead(String username, String password) {
+        // 先加密输入的密码
+        String encryptedPassword = MD5Util.encrypt(password);
+        
         // 1. 检查部门负责人表
         DepartmentHead deptHead = departmentHeadMapper.findByUsername(username);
         if (deptHead != null) {
-            if (password.equals(deptHead.getXjbmfzrMm())) {
+            if (encryptedPassword.equals(deptHead.getXjbmfzrMm())) {
                 return Result.success(deptHead);
             }
         }
@@ -111,7 +115,7 @@ public class AuthService {
         // 2. 检查学院表
         Academy academy = academyMapper.findByUsername(username);
         if (academy != null) {
-            if (password.equals(academy.getXyMm())) {
+            if (encryptedPassword.equals(academy.getXyMm())) {
                 return Result.success(academy);
             }
         }
@@ -139,8 +143,8 @@ public class AuthService {
             return Result.error("账号不存在");
         }
 
-        // 验证密码
-        if (!password.equals(admin.getGlyMm())) {
+        // 验证密码：将输入的密码加密后，再与数据库对比
+        if (!MD5Util.encrypt(password).equals(admin.getGlyMm())) {
             return Result.error("密码错误");
         }
 
