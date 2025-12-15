@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.ActivityTagMapper">
+
+    <!-- 标签结果映射 -->
+    <resultMap id="TagResultMap" type="com.university.volunteer.entity.Tag">
+        <id property="bqId" column="BQ_ID"/>
+        <result property="bqMc" column="BQ_MC"/>
+        <result property="bqLx" column="BQ_LX"/>
+        <result property="fId" column="F_ID"/>
+        <result property="zt" column="ZT"/>
+        <result property="rd" column="RD"/>
+    </resultMap>
+
+    <!-- 根据活动编号查询其所有标签 -->
+    <select id="findTagsByActivityId" resultMap="TagResultMap">
+        SELECT t.BQ_ID, t.BQ_MC, t.BQ_LX, t.F_ID, t.ZT, t.RD
+        FROM t_bqzd t
+        INNER JOIN t_zyhd_bq hb ON t.BQ_ID = hb.BQ_ID
+        WHERE hb.HD_BH = #{hdBh} AND t.ZT = 1
+        ORDER BY t.BQ_LX, t.RD DESC
+    </select>
+
+    <!-- 根据标签ID查询拥有该标签的活动编号列表 -->
+    <select id="findActivityIdsByTagId" resultType="java.lang.Integer">
+        SELECT HD_BH
+        FROM t_zyhd_bq
+        WHERE BQ_ID = #{bqId}
+        ORDER BY HD_BH
+    </select>
+
+    <!-- 批量插入活动-标签关联 -->
+    <insert id="insertBatch">
+        INSERT INTO t_zyhd_bq (HD_BH, BQ_ID)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.hdBh}, #{item.bqId})
+        </foreach>
+    </insert>
+
+    <!-- 删除活动的所有标签关联 -->
+    <delete id="deleteByActivityId">
+        DELETE FROM t_zyhd_bq
+        WHERE HD_BH = #{hdBh}
+    </delete>
+
+    <!-- 删除指定活动的指定标签 -->
+    <delete id="deleteByActivityIdAndTagId">
+        DELETE FROM t_zyhd_bq
+        WHERE HD_BH = #{hdBh} AND BQ_ID = #{bqId}
+    </delete>
+
+    <!-- 检查活动是否拥有某个标签 -->
+    <select id="existsByActivityIdAndTagId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM t_zyhd_bq
+        WHERE HD_BH = #{hdBh} AND BQ_ID = #{bqId}
+    </select>
+
+</mapper>

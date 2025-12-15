@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.VolunteerAuditMapper">
+
+    <!-- 志愿者审核结果映射 -->
+    <resultMap id="VolunteerAuditResultMap" type="com.university.volunteer.dto.VolunteerAuditDTO">
+        <id property="id" column="ID"/>
+        <result property="studentId" column="XS_XH"/>
+        <result property="studentName" column="XS_XM"/>
+        <result property="college" column="SS_XY"/>
+        <result property="className" column="BJ_MC"/>
+        <result property="phone" column="XS_DH"/>
+        <result property="politic" column="ZZMM"/>
+        <result property="interests" column="XQ_BQ"/>
+        <result property="skills" column="JN_BQ"/>
+        <result property="introduction" column="GRJJ"/>
+        <result property="activityId" column="HD_BH"/>
+        <result property="activityName" column="HD_MC"/>
+        <result property="registerTime" column="BM_SJ"/>
+        <result property="status" column="BM_ZT"/>
+        <result property="auditReason" column="SH_LY"/>
+        <result property="requiredVolunteers" column="ZM_RS"/>
+        <result property="currentVolunteers" column="YBM_RS"/>
+    </resultMap>
+
+    <!-- 查询待审核的志愿者报名列表 -->
+    <select id="findRegistrationsByStatus" resultMap="VolunteerAuditResultMap">
+        SELECT 
+            r.ID,
+            r.XS_XH,
+            r.XS_XM,
+            s.SS_XY,
+            s.BJ_MC,
+            s.XS_DH,
+            s.ZZMM,
+            s.XQ_BQ,
+            s.JN_BQ,
+            s.GRJJ,
+            r.HD_BH,
+            r.HD_MC,
+            r.BM_SJ,
+            r.BM_ZT,
+            r.SH_LY,
+            a.ZM_RS,
+            a.YBM_RS
+        FROM t_zyhdbmb r
+        LEFT JOIN t_xs s ON r.XS_XH = s.XS_XH
+        LEFT JOIN t_zyhd a ON r.HD_BH = a.HD_BH
+        <where>
+            <if test="status != null and status != ''">
+                r.BM_ZT = #{status}
+            </if>
+        </where>
+        ORDER BY r.BM_SJ DESC
+    </select>
+
+    <!-- 根据报名ID查询详细信息 -->
+    <select id="findRegistrationById" resultMap="VolunteerAuditResultMap">
+        SELECT 
+            r.ID,
+            r.XS_XH,
+            r.XS_XM,
+            s.SS_XY,
+            s.BJ_MC,
+            s.XS_DH,
+            s.ZZMM,
+            s.XQ_BQ,
+            s.JN_BQ,
+            s.GRJJ,
+            r.HD_BH,
+            r.HD_MC,
+            r.BM_SJ,
+            r.BM_ZT,
+            r.SH_LY,
+            a.ZM_RS,
+            a.YBM_RS
+        FROM t_zyhdbmb r
+        LEFT JOIN t_xs s ON r.XS_XH = s.XS_XH
+        LEFT JOIN t_zyhd a ON r.HD_BH = a.HD_BH
+        WHERE r.ID = #{registrationId}
+    </select>
+
+    <!-- 根据报名ID查询活动编号（用于更新YBM_RS） -->
+    <select id="findActivityIdByRegistrationId" resultType="java.lang.Integer">
+        SELECT HD_BH FROM t_zyhdbmb WHERE ID = #{registrationId}
+    </select>
+
+    <!-- 更新报名审核状态 -->
+    <update id="updateRegistrationStatus">
+        UPDATE t_zyhdbmb
+        SET BM_ZT = #{status},
+            SH_LY = #{reviewComment}
+        WHERE ID = #{registrationId}
+    </update>
+
+    <!-- 插入模拟志愿审核记录 -->
+    <insert id="insertMockAudit">
+        INSERT INTO t_zyhdbmb (XS_XH, HD_BH, HD_SC, ZYZ_PJ, BM_SJ, BM_ZT, SH_SJ, SH_LY)
+        VALUES (#{studentId}, #{activityId}, #{hours}, #{description}, #{submitTime},
+                CASE #{status}
+                    WHEN 0 THEN '待审核'
+                    WHEN 1 THEN '已审核通过'
+                    WHEN 2 THEN '已拒绝'
+                    ELSE '待审核'
+                END,
+                #{auditTime}, #{rejectReason})
+    </insert>
+
+</mapper>

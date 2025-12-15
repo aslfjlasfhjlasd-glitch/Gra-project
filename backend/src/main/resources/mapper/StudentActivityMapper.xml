@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.StudentActivityMapper">
+
+    <!-- 志愿活动结果映射（带标签关联） -->
+    <resultMap id="VolunteerActivityResultMap" type="com.university.volunteer.entity.VolunteerActivity">
+        <id property="hdBh" column="HD_BH"/>
+        <result property="hdMc" column="HD_MC"/>
+        <result property="bmSj" column="bmSj"/>
+        <result property="hdSj" column="hdSj"/>
+        <result property="bmKssj" column="BM_KSSJ"/>
+        <result property="bmJssj" column="BM_JSSJ"/>
+        <result property="hdKssj" column="HD_KSSJ"/>
+        <result property="hdJssj" column="HD_JSSJ"/>
+        <result property="hdNr" column="HD_NR"/>
+        <result property="hdDd" column="HD_DD"/>
+        <result property="zmRs" column="ZM_RS"/>
+        <result property="ybmRs" column="YBM_RS"/>
+        <result property="hdXq" column="HDXQ"/>
+        <result property="hdBz" column="HD_BZ"/>
+        <result property="hdFqDw" column="HD_FQ_DW"/>
+        <result property="hdZt" column="HD_ZT"/>
+        <result property="fbZt" column="FB_ZT"/>
+        <result property="hdBq" column="HD_BQ"/>
+        <result property="jnYq" column="JN_YQ"/>
+        <result property="zyXz" column="ZY_XZ"/>
+        <result property="bbh" column="BBH"/>
+        <result property="hdXf" column="HD_XF"/>
+        <!-- 关联查询标签列表 -->
+        <collection property="tags"
+                    column="HD_BH"
+                    select="com.university.volunteer.mapper.ActivityTagMapper.findTagsByActivityId"/>
+    </resultMap>
+
+    <!-- 根据ID获取活动信息（带标签） -->
+    <select id="findActivityById" resultMap="VolunteerActivityResultMap">
+        SELECT HD_BH, HD_MC,
+               CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+               HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+               HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+               HD_BQ, JN_YQ, ZY_XZ, BBH, HD_XF
+        FROM t_zyhd
+        WHERE HD_BH = #{activityId}
+    </select>
+
+    <!-- 根据活动发起单位查询活动列表（带标签） -->
+    <select id="findActivitiesByDepartment" resultMap="VolunteerActivityResultMap">
+        SELECT HD_BH, HD_MC,
+               CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+               HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+               HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+               HD_BQ, JN_YQ, ZY_XZ, BBH, HD_XF
+        FROM t_zyhd
+        WHERE HD_FQ_DW = #{department}
+        ORDER BY HD_BH DESC
+    </select>
+
+    <!-- 获取所有活动列表（带标签） -->
+    <select id="findAllActivities" resultMap="VolunteerActivityResultMap">
+        SELECT HD_BH, HD_MC,
+               CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+               HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+               HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+               HD_BQ, JN_YQ, ZY_XZ, BBH, HD_XF
+        FROM t_zyhd
+        ORDER BY HD_BH DESC
+    </select>
+
+    <!-- 根据标签ID查询活动列表（新增：用于标签筛选） -->
+    <select id="findActivitiesByTagId" resultMap="VolunteerActivityResultMap">
+        SELECT a.HD_BH, a.HD_MC,
+               CONCAT(DATE_FORMAT(a.BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(a.BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(a.HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(a.HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               a.BM_KSSJ, a.BM_JSSJ, a.HD_KSSJ, a.HD_JSSJ,
+               a.HD_NR, a.HD_DD, a.ZM_RS, a.YBM_RS, a.HDXQ,
+               a.HD_BZ, a.HD_FQ_DW, a.HD_ZT, a.FB_ZT,
+               a.HD_BQ, a.JN_YQ, a.ZY_XZ, a.BBH, a.HD_XF
+        FROM t_zyhd a
+        INNER JOIN t_zyhd_bq hb ON a.HD_BH = hb.HD_BH
+        WHERE hb.BQ_ID = #{tagId}
+          AND a.FB_ZT = '已发布'
+        ORDER BY a.HD_BH DESC
+    </select>
+
+    <!-- 根据多个标签ID查询活动列表（新增：用于智能推荐） -->
+    <select id="findActivitiesByTagIds" resultMap="VolunteerActivityResultMap">
+        SELECT DISTINCT a.HD_BH, a.HD_MC,
+               CONCAT(DATE_FORMAT(a.BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(a.BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(a.HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(a.HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               a.BM_KSSJ, a.BM_JSSJ, a.HD_KSSJ, a.HD_JSSJ,
+               a.HD_NR, a.HD_DD, a.ZM_RS, a.YBM_RS, a.HDXQ,
+               a.HD_BZ, a.HD_FQ_DW, a.HD_ZT, a.FB_ZT,
+               a.HD_BQ, a.JN_YQ, a.ZY_XZ, a.BBH, a.HD_XF
+        FROM t_zyhd a
+        INNER JOIN t_zyhd_bq hb ON a.HD_BH = hb.HD_BH
+        WHERE hb.BQ_ID IN
+        <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+          AND a.FB_ZT = '已发布'
+        ORDER BY a.HD_BH DESC
+    </select>
+
+    <!-- 获取所有招募中的活动（用于推荐系统） -->
+    <select id="findRecruitingActivities" resultMap="VolunteerActivityResultMap">
+        SELECT HD_BH, HD_MC,
+               CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+               CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+               BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+               HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+               HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+               HD_BQ, JN_YQ, ZY_XZ, BBH, LL_CS, HD_XF
+        FROM t_zyhd
+        WHERE FB_ZT = '已发布'
+          AND BM_JSSJ > NOW()
+        ORDER BY HD_BH DESC
+    </select>
+<!-- 获取热门活动（按报名人数倒序） -->
+<select id="findHotActivities" resultMap="VolunteerActivityResultMap">
+    SELECT HD_BH, HD_MC,
+           CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+           CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+           BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+           HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+           HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+           HD_BQ, JN_YQ, ZY_XZ, BBH, LL_CS, HD_XF
+    FROM t_zyhd
+    WHERE FB_ZT = '已发布'
+      AND BM_JSSJ > NOW()
+    ORDER BY YBM_RS DESC, HD_BH DESC
+    LIMIT #{limit}
+</select>
+
+<!-- 获取热门活动（带浏览量阈值） -->
+<select id="findHotActivitiesWithThreshold" resultMap="VolunteerActivityResultMap">
+    SELECT HD_BH, HD_MC,
+           CONCAT(DATE_FORMAT(BM_KSSJ, '%Y-%m-%d %H:%i'), '至', DATE_FORMAT(BM_JSSJ, '%Y-%m-%d %H:%i')) as bmSj,
+           CONCAT(DATE_FORMAT(HD_KSSJ, '%Y-%m-%d %H:%i'), '-', DATE_FORMAT(HD_JSSJ, '%Y-%m-%d %H:%i')) as hdSj,
+           BM_KSSJ, BM_JSSJ, HD_KSSJ, HD_JSSJ,
+           HD_NR, HD_DD, ZM_RS, YBM_RS, HDXQ,
+           HD_BZ, HD_FQ_DW, HD_ZT, FB_ZT,
+           HD_BQ, JN_YQ, ZY_XZ, BBH, LL_CS, HD_XF
+    FROM t_zyhd
+    WHERE FB_ZT = '已发布'
+      AND BM_JSSJ > NOW()
+      AND LL_CS >= #{minViews}
+    ORDER BY YBM_RS DESC, HD_BH DESC
+    LIMIT #{limit}
+</select>
+
+<!-- 更新活动信息（使用乐观锁） -->
+<update id="updateActivity">
+    UPDATE t_zyhd
+    SET HD_MC = #{hdMc},
+        HD_NR = #{hdNr},
+        HD_DD = #{hdDd},
+        BM_KSSJ = #{bmKssj},
+        BM_JSSJ = #{bmJssj},
+        HD_KSSJ = #{hdKssj},
+        HD_JSSJ = #{hdJssj},
+        ZM_RS = #{zmRs},
+        HD_BQ = #{hdBq},
+        JN_YQ = #{jnYq},
+        ZY_XZ = #{zyXz},
+        HDXQ = #{hdXq},
+        HD_BZ = #{hdBz},
+        BBH = BBH + 1
+    WHERE HD_BH = #{hdBh}
+      AND BBH = #{bbh}
+</update>
+
+</mapper>

@@ -1,0 +1,42 @@
+# ===================== 前端专属忽略（精准限定目录）=====================
+# 依赖/构建产物（必忽略）
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env.development
+frontend/.env.production
+# 前端IDE/缓存文件
+frontend/.vscode/
+frontend/.idea/
+frontend/*.log
+# 只忽略前端临时/无用图片（保留业务图片，比如 frontend/src/assets/images/ 里的不忽略）
+frontend/temp/*.jpg
+frontend/temp/*.jpeg
+frontend/temp/*.png
+frontend/temp/*.gif
+frontend/temp/*.svg
+frontend/temp/*.bmp
+
+# ===================== 后端专属忽略 =====================
+# 编译产物（必忽略）
+backend/target/
+# IDE配置（开发工具冗余文件）
+backend/.idea/
+backend/*.iml
+backend/.classpath
+backend/.project
+# 日志/临时文件
+backend/logs/
+backend/*.log
+backend/temp/
+
+# ===================== 通用忽略（全项目生效）=====================
+# 系统冗余文件
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+# Git/CI 冗余
+.gitignore.bak
+.trae/  # 如果你不需要这个目录，可忽略；需要则删除这行
+.vercelignore.bak

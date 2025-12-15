@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.StudentTagMapper">
+
+    <!-- 标签结果映射 -->
+    <resultMap id="TagResultMap" type="com.university.volunteer.entity.Tag">
+        <id property="bqId" column="BQ_ID"/>
+        <result property="bqMc" column="BQ_MC"/>
+        <result property="bqLx" column="BQ_LX"/>
+        <result property="fId" column="F_ID"/>
+        <result property="zt" column="ZT"/>
+        <result property="rd" column="RD"/>
+    </resultMap>
+
+    <!-- 根据学生学号查询其所有标签 -->
+    <select id="findTagsByStudentId" resultMap="TagResultMap">
+        SELECT t.BQ_ID, t.BQ_MC, t.BQ_LX, t.F_ID, t.ZT, t.RD
+        FROM t_bqzd t
+        INNER JOIN t_xs_bq xb ON t.BQ_ID = xb.BQ_ID
+        WHERE xb.XS_XH = #{xsXh} AND t.ZT = 1
+        ORDER BY t.BQ_LX, t.RD DESC
+    </select>
+
+    <!-- 根据标签ID查询拥有该标签的学生学号列表 -->
+    <select id="findStudentIdsByTagId" resultType="java.lang.Integer">
+        SELECT XS_XH
+        FROM t_xs_bq
+        WHERE BQ_ID = #{bqId}
+        ORDER BY XS_XH
+    </select>
+
+    <!-- 批量插入学生-标签关联 -->
+    <insert id="insertBatch">
+        INSERT INTO t_xs_bq (XS_XH, BQ_ID)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.xsXh}, #{item.bqId})
+        </foreach>
+    </insert>
+
+    <!-- 删除学生的所有标签关联 -->
+    <delete id="deleteByStudentId">
+        DELETE FROM t_xs_bq
+        WHERE XS_XH = #{xsXh}
+    </delete>
+
+    <!-- 删除指定学生的指定标签 -->
+    <delete id="deleteByStudentIdAndTagId">
+        DELETE FROM t_xs_bq
+        WHERE XS_XH = #{xsXh} AND BQ_ID = #{bqId}
+    </delete>
+
+    <!-- 检查学生是否拥有某个标签 -->
+    <select id="existsByStudentIdAndTagId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM t_xs_bq
+        WHERE XS_XH = #{xsXh} AND BQ_ID = #{bqId}
+    </select>
+
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.ConfigMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ConfigResultMap" type="com.university.volunteer.entity.Config">
+        <id property="configId" column="config_id"/>
+        <result property="configKey" column="config_key"/>
+        <result property="configValue" column="config_value"/>
+        <result property="configName" column="config_name"/>
+        <result property="description" column="description"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 查询所有配置项 -->
+    <select id="selectAllConfigs" resultMap="ConfigResultMap">
+        SELECT config_id, config_key, config_value, config_name, description, update_time
+        FROM sys_config
+        ORDER BY config_id
+    </select>
+
+    <!-- 根据配置键查询配置 -->
+    <select id="selectByKey" resultMap="ConfigResultMap">
+        SELECT config_id, config_key, config_value, config_name, description, update_time
+        FROM sys_config
+        WHERE config_key = #{configKey}
+    </select>
+
+    <!-- 更新配置值 -->
+    <update id="updateConfig">
+        UPDATE sys_config
+        SET config_value = #{configValue},
+            update_time = NOW()
+        WHERE config_key = #{configKey}
+    </update>
+
+    <!-- 批量更新配置 -->
+    <update id="batchUpdateConfigs">
+        <foreach collection="configs" item="config" separator=";">
+            UPDATE sys_config
+            SET config_value = #{config.configValue},
+                update_time = NOW()
+            WHERE config_key = #{config.configKey}
+        </foreach>
+    </update>
+
+    <!-- 插入新配置 -->
+    <insert id="insertConfig" useGeneratedKeys="true" keyProperty="configId">
+        INSERT INTO sys_config (config_key, config_value, config_name, description)
+        VALUES (#{configKey}, #{configValue}, #{configName}, #{description})
+    </insert>
+
+</mapper>

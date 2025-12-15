@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.university.volunteer.mapper.StudentMapper">
+
+    <!-- 根据用户名查询学生（登录用） -->
+    <select id="findByUsername" resultType="com.university.volunteer.entity.Student">
+        SELECT 
+            XS_XH as xsXh,
+            XS_XM as xsXm,
+            XS_MM as xsMm,
+            XS_DH as xsDh,
+            XS_XB as xsXb,
+            ZZMM as zzmm,
+            SS_XY as ssXy,
+            BJ_BH as bjBh,
+            BJ_MC as bjMc,
+            XQ_BQ as xqBq,
+            JN_BQ as jnBq,
+            GRJJ as grjj
+        FROM t_xs
+        WHERE XS_XH = #{username}
+    </select>
+
+    <!-- 根据学号查询学生完整信息 -->
+    <select id="findStudentById" resultType="com.university.volunteer.entity.Student">
+        SELECT 
+            XS_XH as xsXh,
+            XS_XM as xsXm,
+            XS_MM as xsMm,
+            XS_DH as xsDh,
+            XS_XB as xsXb,
+            ZZMM as zzmm,
+            SS_XY as ssXy,
+            BJ_BH as bjBh,
+            BJ_MC as bjMc,
+            XQ_BQ as xqBq,
+            JN_BQ as jnBq,
+            GRJJ as grjj
+        FROM t_xs
+        WHERE XS_XH = #{studentId}
+    </select>
+
+    <!-- 分页查询学生列表（管理员用） -->
+    <select id="findStudentsByPage" resultType="com.university.volunteer.entity.Student">
+        SELECT
+            XS_XH as xsXh,
+            XS_XM as xsXm,
+            XS_DH as xsDh,
+            XS_XB as xsXb,
+            ZZMM as zzmm,
+            SS_XY as ssXy,
+            BJ_MC as bjMc
+        FROM t_xs
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (XS_XM LIKE CONCAT('%', #{keyword}, '%')
+                OR XS_XH LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY XS_XH DESC
+    </select>
+
+    <!-- 检查学号是否存在 -->
+    <select id="existsByStudentId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM t_xs WHERE XS_XH = #{studentId}
+    </select>
+
+    <!-- 插入新学生 -->
+    <insert id="insertStudent" parameterType="com.university.volunteer.entity.Student">
+        INSERT INTO t_xs (XS_XH, XS_XM, XS_MM, XS_DH, XS_XB, ZZMM, SS_XY, BJ_MC)
+        VALUES (#{xsXh}, #{xsXm}, #{xsMm}, #{xsDh}, #{xsXb}, #{zzmm}, #{ssXy}, #{bjMc})
+    </insert>
+
+    <!-- 更新学生信息（学生权限） -->
+    <update id="updateStudentProfile" parameterType="com.university.volunteer.entity.Student">
+        UPDATE t_xs
+        <set>
+            <if test="zzmm != null">ZZMM = #{zzmm},</if>
+            <if test="xsDh != null">XS_DH = #{xsDh},</if>
+            <if test="xqBq != null">XQ_BQ = #{xqBq},</if>
+            <if test="jnBq != null">JN_BQ = #{jnBq},</if>
+            <if test="grjj != null">GRJJ = #{grjj},</if>
+        </set>
+        WHERE XS_XH = #{xsXh}
+    </update>
+
+    <!-- 更新学生完整信息（管理员权限） -->
+    <update id="updateStudentFullInfo" parameterType="com.university.volunteer.entity.Student">
+        UPDATE t_xs
+        <set>
+            <if test="xsXm != null">XS_XM = #{xsXm},</if>
+            <if test="xsDh != null">XS_DH = #{xsDh},</if>
+            <if test="xsXb != null">XS_XB = #{xsXb},</if>
+            <if test="zzmm != null">ZZMM = #{zzmm},</if>
+            <if test="ssXy != null">SS_XY = #{ssXy},</if>
+            <if test="bjMc != null">BJ_MC = #{bjMc},</if>
+            <if test="xsMm != null">XS_MM = #{xsMm},</if>
+        </set>
+        WHERE XS_XH = #{xsXh}
+    </update>
+
+    <!-- 更新学生密码 -->
+    <update id="updatePassword">
+        UPDATE t_xs
+        SET XS_MM = #{newPassword}
+        WHERE XS_XH = #{studentId}
+    </update>
+
+    <!-- 删除学生 -->
+    <delete id="deleteStudent">
+        DELETE FROM t_xs WHERE XS_XH = #{studentId}
+    </delete>
+
+    <!-- 统计学生总数 -->
+    <select id="countAllStudents" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM t_xs
+    </select>
+
+</mapper>
