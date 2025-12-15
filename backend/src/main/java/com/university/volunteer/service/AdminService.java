@@ -2,9 +2,12 @@ package com.university.volunteer.service;
 
 import com.university.volunteer.common.Result;
 import com.university.volunteer.dto.VolunteerAuditDTO;
+import com.university.volunteer.entity.Admin;
 import com.university.volunteer.entity.VolunteerActivity;
+import com.university.volunteer.mapper.AdminMapper;
 import com.university.volunteer.mapper.StudentActivityMapper;
 import com.university.volunteer.mapper.VolunteerAuditMapper;
+import com.university.volunteer.utils.MD5Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,9 @@ public class AdminService {
 
     @Autowired
     private VolunteerAuditMapper volunteerAuditMapper;
+    
+    @Autowired
+    private AdminMapper adminMapper;
 
     /**
      * 获取所有活动列表（管理员可以查看除"未申报"外的所有活动）
@@ -242,6 +248,57 @@ public class AdminService {
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("操作失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 修改管理员密码
+     * @param username 管理员账号
+     * @param oldPassword 旧密码（明文）
+     * @param newPassword 新密码（明文）
+     * @return 操作结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Result<String> changeAdminPassword(String username, String oldPassword, String newPassword) {
+        try {
+            // 1. 验证参数
+            if (username == null || username.trim().isEmpty()) {
+                return Result.error("管理员账号不能为空");
+            }
+            if (oldPassword == null || oldPassword.trim().isEmpty()) {
+                return Result.error("旧密码不能为空");
+            }
+            if (newPassword == null || newPassword.trim().isEmpty()) {
+                return Result.error("新密码不能为空");
+            }
+            if (newPassword.length() < 6) {
+                return Result.error("新密码长度不能少于6位");
+            }
+            
+            // 2. 查询管理员信息
+            Admin admin = adminMapper.findByUsername(username);
+            if (admin == null) {
+                return Result.error("管理员账号不存在");
+            }
+            
+            // 3. 验证旧密码（需要MD5加密后比对）
+            String encryptedOldPassword = MD5Util.encrypt(oldPassword);
+            if (!encryptedOldPassword.equals(admin.getGlyMm())) {
+                return Result.error("旧密码错误");
+            }
+            
+            // 4. 更新密码（新密码需要MD5加密）
+            String encryptedNewPassword = MD5Util.encrypt(newPassword);
+            int rows = adminMapper.updatePassword(username, encryptedNewPassword);
+            
+            if (rows > 0) {
+                return Result.success("密码修改成功");
+            } else {
+                return Result.error("密码修改失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("密码修改失败：" + e.getMessage());
         }
     }
 }

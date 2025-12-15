@@ -380,4 +380,28 @@ public class AdminController {
     public Result<String> deleteDepartmentHead(@PathVariable String username, @RequestParam(required = false) String accountType) {
         return departmentHeadService.deleteDepartmentHead(username, accountType);
     }
+    
+    /**
+     * 修改管理员密码
+     * @param payload 包含账号、旧密码、新密码的请求体
+     * @return 修改结果
+     */
+    @PostMapping("/change-password")
+    public Result<String> changeAdminPassword(@RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        String oldPassword = payload.get("oldPassword");
+        String newPassword = payload.get("newPassword");
+        
+        if (username == null || username.trim().isEmpty()) {
+            return Result.error("管理员账号不能为空");
+        }
+        if (oldPassword == null || oldPassword.trim().isEmpty()) {
+            return Result.error("旧密码不能为空");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            return Result.error("新密码不能为空");
+        }
+        
+        return adminService.changeAdminPassword(username, oldPassword, newPassword);
+    }
 }

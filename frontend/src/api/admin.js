@@ -236,3 +236,18 @@ export const deleteDepartmentHead = (username, accountType) => {
     params: { accountType }
   });
 };
+
+/**
+ * 修改管理员密码
+ * @param {string} username 管理员账号
+ * @param {string} oldPassword 旧密码
+ * @param {string} newPassword 新密码
+ * @returns {Promise} 修改结果
+ */
+export const changeAdminPassword = (username, oldPassword, newPassword) => {
+  return axios.post(`${API_BASE_URL}/change-password`, {
+    username,
+    oldPassword,
+    newPassword
+  });
+};

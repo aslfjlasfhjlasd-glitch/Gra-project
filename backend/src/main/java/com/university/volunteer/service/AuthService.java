@@ -142,9 +142,7 @@ public class AuthService {
         if (admin == null) {
             return Result.error("账号不存在");
         }
-
-        // 验证密码：将输入的密码加密后，再与数据库对比
-        if (!MD5Util.encrypt(password).equals(admin.getGlyMm())) {
+        if (!com.university.volunteer.utils.MD5Util.encrypt(password).equals(admin.getGlyMm())) {
             return Result.error("密码错误");
         }
 

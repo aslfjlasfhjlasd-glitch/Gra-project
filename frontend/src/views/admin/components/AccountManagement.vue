@@ -16,10 +16,16 @@
       >
         负责人账号管理
       </button>
+      <button
+        :class="['tab-btn', { active: activeTab === 'admin' }]"
+        @click="activeTab = 'admin'"
+      >
+        管理员密码修改
+      </button>
     </div>
 
     <!-- 操作栏 -->
-    <div class="operation-bar mb-4 flex items-center gap-4">
+    <div v-if="activeTab !== 'admin'" class="operation-bar mb-4 flex items-center gap-4">
       <input
         v-model="searchKeyword"
         type="text"
@@ -148,6 +154,69 @@
       </div>
     </div>
 
+    <!-- 管理员密码修改 -->
+    <div v-if="activeTab === 'admin'" class="admin-password-section">
+      <div class="password-card">
+        <h3 class="text-xl font-bold mb-6">修改管理员密码</h3>
+        <form @submit.prevent="handleChangePassword" class="password-form">
+          <div class="form-group">
+            <label>管理员账号 <span class="text-red-500">*</span></label>
+            <input
+              v-model="passwordForm.username"
+              type="text"
+              placeholder="请输入管理员账号"
+              required
+              class="form-input"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-group">
+            <label>旧密码 <span class="text-red-500">*</span></label>
+            <input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              placeholder="请输入旧密码"
+              required
+              class="form-input"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-group">
+            <label>新密码 <span class="text-red-500">*</span></label>
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              placeholder="请输入新密码（至少6位）"
+              required
+              minlength="6"
+              class="form-input"
+              autocomplete="new-password"
+            />
+            <p class="text-sm text-gray-500 mt-1">密码长度不能少于6位</p>
+          </div>
+          <div class="form-group">
+            <label>确认新密码 <span class="text-red-500">*</span></label>
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              placeholder="请再次输入新密码"
+              required
+              class="form-input"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" :disabled="loading">
+              {{ loading ? '提交中...' : '确认修改' }}
+            </button>
+            <button type="button" class="btn btn-secondary" @click="resetPasswordForm">
+              重置
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- 新增/编辑弹窗 -->
     <div v-if="showDialog" class="dialog-overlay" @click.self="closeDialog">
       <div class="dialog-content">
@@ -268,7 +337,8 @@ import {
   addDepartmentHead,
   updateDepartmentHead,
   resetDepartmentHeadPassword,
-  deleteDepartmentHead
+  deleteDepartmentHead,
+  changeAdminPassword
 } from '@/api/admin';
 
 // 状态管理
@@ -305,6 +375,14 @@ const formData = ref({
   className: ''
 });
 
+// 管理员密码修改表单
+const passwordForm = ref({
+  username: '',
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
 // 计算属性
 const dialogTitle = computed(() => {
   const type = activeTab.value === 'student' ? '学生' : '负责人';
@@ -314,7 +392,9 @@ const dialogTitle = computed(() => {
 // 监听 tab 切换，重新加载数据
 watch(activeTab, () => {
   searchKeyword.value = '';
-  loadData();
+  if (activeTab.value !== 'admin') {
+    loadData();
+  }
 });
 
 // 加载数据
@@ -323,7 +403,7 @@ const loadData = async () => {
   try {
     if (activeTab.value === 'student') {
       await loadStudentList();
-    } else {
+    } else if (activeTab.value === 'head') {
       await loadHeadList();
     }
   } catch (error) {
@@ -548,6 +628,46 @@ const closeDialog = () => {
     gender: '',
     politicalStatus: '',
     className: ''
+  };
+};
+
+// 修改管理员密码
+const handleChangePassword = async () => {
+  // 验证两次密码输入是否一致
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    alert('两次输入的新密码不一致，请重新输入');
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const response = await changeAdminPassword(
+      passwordForm.value.username,
+      passwordForm.value.oldPassword,
+      passwordForm.value.newPassword
+    );
+
+    if (response.data.code === 200) {
+      alert(response.data.message || '密码修改成功');
+      resetPasswordForm();
+    } else {
+      alert(response.data.message || '密码修改失败');
+    }
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    alert(error.response?.data?.message || '修改密码失败，请稍后重试');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 重置密码表单
+const resetPasswordForm = () => {
+  passwordForm.value = {
+    username: '',
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   };
 };
 
@@ -819,5 +939,49 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* 管理员密码修改样式 */
+.admin-password-section {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.password-card {
+  background: white;
+  border-radius: 8px;
+  padding: 40px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.password-form .form-group {
+  margin-bottom: 20px;
+}
+
+.password-form .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.password-form .form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.form-actions .btn {
+  flex: 1;
 }
 </style>
